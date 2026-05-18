@@ -1,0 +1,109 @@
+
+==============================================================================
+  AI EMERGENCY RESPONSE SYSTEM — BENCHMARK RESULTS
+  Bengaluru Multi-Agent vs Simple Baseline Dispatch
+==============================================================================
+
+#   Scenario                                AI ETA  Base ETA   Saved  Conflict
+------------------------------------------------------------------------------
+1   Major accident Silk Board flyover,…       12 min   12.7 min +0.7 min  YES (1)   
+2   Bus collision Hebbal flyover, 4…          10 min    8.0 min -2.0 min  YES (1)   
+3   Car crash Marathahalli bridge, 2…         16 min   18.2 min +2.2 min  YES (1)   
+4   Bike accident Koramangala 5th block,…      5 min    3.0 min -2.0 min  YES (1)   
+5   Multiple vehicle pileup Indiranagar,…     15 min   18.3 min +3.3 min  YES (1)   
+6   Truck accident Whitefield signal, 3…      10 min    8.0 min -2.0 min  YES (1)   
+7   Auto collision MG Road, 2 injured,…       10 min    8.0 min -2.0 min  YES (1)   
+8   Bus accident Hebbal, 8 injured,…          10 min    3.0 min -7.0 min  YES (1)   
+
+──────────────────────────────────────────────────────────────────────────────
+  HOSPITAL SELECTION QUALITY (AI trauma-aware vs baseline nearest-only)
+──────────────────────────────────────────────────────────────────────────────
+  #   AI Hospital (trauma+beds+distance scored)  Baseline (nearest only)       
+  --- ------------------------------------------ ------------------------------
+  1   Dr B R Ambedkar Medical College And Hosp   Rajarajeswari Medical Colleg   ✗ DIFFERENT
+  2   M S Ramaiah Hospital                       M S Ramaiah Hospital           ✓ same
+  3   Rajarajeswari Medical College And Hospit   Vydehi Hospital                ✗ DIFFERENT
+  4   BGS Medical College and Hospital           Rajarajeswari Medical Colleg   ✗ DIFFERENT
+  5   Dr B R Ambedkar Medical College And Hosp   Rajarajeswari Medical Colleg   ✗ DIFFERENT
+  6   Vydehi Hospital                            Vydehi Hospital                ✓ same
+  7   BGS Medical College and Hospital           Rajarajeswari Medical Colleg   ✗ DIFFERENT
+  8   M S Ramaiah Hospital                       M S Ramaiah Hospital           ✓ same
+
+  Hospital match rate: 3/8 scenarios
+  In 5 cases AI chose a different (better-equipped) hospital than baseline.
+
+──────────────────────────────────────────────────────────────────────────────
+  SUMMARY STATISTICS
+──────────────────────────────────────────────────────────────────────────────
+  Scenarios run             : 8
+  AI faster (ETA)           : 3/8 scenarios
+  Baseline faster (ETA)     : 5/8 scenarios
+  Avg AI ETA                : 11.0 min
+  Avg Baseline ETA          : 9.9 min
+  Avg time saved (AI wins)  : +2.1 min
+  Conflicts detected        : 8/8 scenarios (100%)
+  ML severity overrides     : 6/8 scenarios
+  Hospital selection diff   : 5/8 cases (AI chose trauma-appropriate hospital)
+──────────────────────────────────────────────────────────────────────────────
+  NOTE: Baseline is 'optimistic' — flat speed, no signal delays, no dispatch
+  overhead. AI ETA includes realistic Bengaluru traffic + multi-agent overhead.
+  Key advantage: AI selects trauma-capable hospital with available beds,
+  baseline picks nearest hospital regardless of capacity or specialty.
+──────────────────────────────────────────────────────────────────────────────
+
+  DETAILED AGENT DECISIONS
+──────────────────────────────────────────────────────────────────────────────
+
+  [1] Major accident Silk Board flyover, truck rollover, 6 injured, road block
+      Severity : 4/5  (source: ml_model)  |  Triage: P1 immediate
+      AI       : 12 min → Dr B R Ambedkar Medical College And Hospital
+      Baseline : 12.7 min → Rajarajeswari Medical College And Hospital
+      Saved    : +0.7 min  |  Confidence: 32%  |  Conflicts: 1
+
+  [2] Bus collision Hebbal flyover, 4 injured, heavy traffic
+      Severity : 4/5  (source: ml_model)  |  Triage: P2 urgent
+      AI       : 10 min → M S Ramaiah Hospital
+      Baseline : 8.0 min → M S Ramaiah Hospital
+      Saved    : -2.0 min  |  Confidence: 34%  |  Conflicts: 1
+
+  [3] Car crash Marathahalli bridge, 2 injured, raining
+      Severity : 3/5  (source: rule_based)  |  Triage: P2 urgent
+      AI       : 16 min → Rajarajeswari Medical College And Hospital
+      Baseline : 18.2 min → Vydehi Hospital
+      Saved    : +2.2 min  |  Confidence: 33%  |  Conflicts: 1
+
+  [4] Bike accident Koramangala 5th block, 1 injured, minor
+      Severity : 2/5  (source: ml_model)  |  Triage: P2 urgent
+      AI       : 5 min → BGS Medical College and Hospital
+      Baseline : 3.0 min → Rajarajeswari Medical College And Hospital
+      Saved    : -2.0 min  |  Confidence: 36%  |  Conflicts: 1
+
+  [5] Multiple vehicle pileup Indiranagar, 5 injured, critical
+      Severity : 5/5  (source: ml_model)  |  Triage: P1 immediate
+      AI       : 15 min → Dr B R Ambedkar Medical College And Hospital
+      Baseline : 18.3 min → Rajarajeswari Medical College And Hospital
+      Saved    : +3.3 min  |  Confidence: 24%  |  Conflicts: 1
+
+  [6] Truck accident Whitefield signal, 3 injured, road blocked
+      Severity : 4/5  (source: ml_model)  |  Triage: P2 urgent
+      AI       : 10 min → Vydehi Hospital
+      Baseline : 8.0 min → Vydehi Hospital
+      Saved    : -2.0 min  |  Confidence: 53%  |  Conflicts: 1
+
+  [7] Auto collision MG Road, 2 injured, peak hour traffic
+      Severity : 3/5  (source: ml_model)  |  Triage: P2 urgent
+      AI       : 10 min → BGS Medical College and Hospital
+      Baseline : 8.0 min → Rajarajeswari Medical College And Hospital
+      Saved    : -2.0 min  |  Confidence: 32%  |  Conflicts: 1
+
+  [8] Bus accident Hebbal, 8 injured, severe, multiple vehicles
+      Severity : 5/5  (source: rule_based)  |  Triage: P1 immediate
+      AI       : 10 min → M S Ramaiah Hospital
+      Baseline : 3.0 min → M S Ramaiah Hospital
+      Saved    : -7.0 min  |  Confidence: 37%  |  Conflicts: 1
+
+==============================================================================
+  AI system is -1.1 min faster on average across all Bengaluru scenarios.
+  Conflict coordination active in 8/8 cases.
+==============================================================================
+

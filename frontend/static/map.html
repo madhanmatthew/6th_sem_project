@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Emergency Response — Live Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#f7f8fa;--panel:#fff;--ink:#18212f;--muted:#687386;
+  --line:#dbe2ea;--blue:#2563eb;--green:#2f9e44;--red:#d83232;
+  --shadow:0 20px 60px rgba(24,33,47,.18);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--ink);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);flex-shrink:0;gap:12px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{width:36px;height:36px;border-radius:7px;background:#ffe5e5;color:var(--red);display:grid;place-items:center;font-size:18px;border:1px solid #ffbbbb;flex-shrink:0;}
+.brand h1{font-size:15px;font-weight:750;line-height:1.2;}
+.brand p{font-size:11px;color:var(--muted);}
+.nav{display:flex;gap:7px;}
+.nav a{text-decoration:none;color:#344154;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;}
+.nav a.active{color:#fff;background:var(--blue);border-color:var(--blue);}
+/* LAYOUT */
+.main{display:flex;flex:1;overflow:hidden;}
+#map{flex:1;z-index:1;}
+/* TRIGGER PANEL */
+.trigger-panel{width:295px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px;gap:12px;overflow-y:auto;}
+.trigger-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.sel{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:13px;background:var(--bg);color:var(--ink);}
+.sos-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:16px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer;letter-spacing:.02em;transition:opacity .15s,transform .1s;box-shadow:0 4px 18px rgba(216,50,50,.35);}
+.sos-btn:hover{opacity:.9;}
+.sos-btn:active{transform:scale(.98);}
+.sos-btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
+.pulse{animation:pulse 1.8s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 4px 18px rgba(216,50,50,.35);}50%{box-shadow:0 4px 32px rgba(216,50,50,.7);}}
+.spinner-row{display:none;align-items:center;gap:8px;color:var(--muted);font-size:13px;}
+.spinner-row.show{display:flex;}
+.spin{animation:spin 1s linear infinite;font-size:16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hint-box{background:#f0f4f8;border-radius:8px;padding:11px 13px;font-size:12px;color:var(--muted);line-height:1.65;}
+.hint-box strong{color:var(--ink);}
+/* TOAST */
+#toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:99999;pointer-events:none;}
+.toast{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 16px;box-shadow:var(--shadow);font-size:13px;display:flex;align-items:flex-start;gap:11px;min-width:270px;max-width:310px;pointer-events:all;transform:translateX(340px);transition:transform .4s cubic-bezier(.22,.68,0,1.2);position:relative;}
+.toast.show{transform:translateX(0);}
+.toast-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.toast-title{font-weight:700;color:var(--ink);margin-bottom:3px;font-size:13px;}
+.toast-msg{color:var(--muted);font-size:12px;line-height:1.5;}
+.toast-close{position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:2px;}
+.toast-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--blue);border-radius:0 0 0 10px;animation:shrink 8s linear forwards;}
+@keyframes shrink{from{width:100%}to{width:0%}}
+/* VIEW RESULTS BUTTON */
+#view-results-btn{display:none;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--green);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(47,158,68,.35);animation:pulse-green 2s infinite;}
+#view-results-btn.show{display:flex;}
+@keyframes pulse-green{0%,100%{box-shadow:0 4px 16px rgba(47,158,68,.35);}50%{box-shadow:0 4px 28px rgba(47,158,68,.6);}}
+/* SEVERITY BUTTONS */
+.sev-btn{display:flex;align-items:center;justify-content:center;padding:8px 4px;border:1.5px solid var(--line);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;text-align:center;transition:all .15s;background:var(--bg);}
+.sev-btn.active{border-color:var(--blue);background:#eff4ff;color:var(--blue);}
+.sev-btn span{pointer-events:none;}
+/* TAG CHECKBOXES */
+.tag-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid var(--line);border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;background:var(--bg);transition:all .15s;}
+.tag-btn:has(input:checked){background:#eff4ff;border-color:var(--blue);color:var(--blue);}
+.tag-btn input{display:none;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark"><i class="ti ti-ambulance"></i></div>
+    <div>
+      <h1>AI Emergency Response System</h1>
+      <p>Bengaluru smart dispatch &amp; routing</p>
+    </div>
+  </div>
+  <nav class="nav">
+    <a href="/">Overview</a>
+    <a href="/map" class="active">Live Map</a>
+
+  </nav>
+</header>
+
+<div class="main">
+  <aside class="trigger-panel">
+    <div class="trigger-label">🚨 Emergency Trigger</div>
+
+    <div>
+      <div class="trigger-label" style="margin-bottom:5px">Incident Location</div>
+      <select id="location-select" class="sel">
+        <option value="MG Road">MG Road</option>
+        <option value="Brigade Road">Brigade Road</option>
+        <option value="Residency Road">Residency Road</option>
+        <option value="Koramangala">Koramangala</option>
+        <option value="Indiranagar">Indiranagar</option>
+        <option value="Whitefield">Whitefield</option>
+        <option value="Hebbal">Hebbal</option>
+        <option value="Silk Board">Silk Board</option>
+        <option value="Marathahalli">Marathahalli</option>
+        <option value="Electronic City">Electronic City</option>
+        <option value="Yeshwantpur">Yeshwantpur</option>
+        <option value="Bannerghatta Road">Bannerghatta Road</option>
+        <option value="Rajajinagar">Rajajinagar</option>
+        <option value="Jayanagar">Jayanagar</option>
+        <option value="JP Nagar">JP Nagar</option>
+        <option value="Mysore Road">Mysore Road</option>
+        <option value="Tumkur Road">Tumkur Road</option>
+        <option value="Sarjapur Road">Sarjapur Road</option>
+        <option value="Old Airport Road">Old Airport Road</option>
+        <option value="KR Puram">KR Puram</option>
+        <option value="Nagavara">Nagavara</option>
+      </select>
+    </div>
+
+    <div>
+      <div class="trigger-label" style="margin-bottom:5px">Incident Type</div>
+      <select id="incident-type" class="sel">
+        <option value="road accident">Road Accident</option>
+        <option value="vehicle collision">Vehicle Collision</option>
+        <option value="rollover">Vehicle Rollover</option>
+        <option value="head-on collision">Head-on Collision</option>
+        <option value="fire emergency">Fire Emergency</option>
+        <option value="medical emergency">Medical Emergency — Cardiac</option>
+        <option value="pedestrian accident">Pedestrian Hit</option>
+        <option value="multi-vehicle pileup">Multi-vehicle Pileup</option>
+        <option value="hazmat spillage">Hazmat / Tanker Spillage</option>
+      </select>
+    </div>
+
+    <div>
+      <div class="trigger-label" style="margin-bottom:5px">Severity Level</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        <label class="sev-btn" id="sev-low">
+          <input type="radio" name="severity" value="low" style="display:none">
+          <span>🟢 Low</span>
+        </label>
+        <label class="sev-btn active" id="sev-mid">
+          <input type="radio" name="severity" value="moderate" checked style="display:none">
+          <span>🟡 Mid</span>
+        </label>
+        <label class="sev-btn" id="sev-high">
+          <input type="radio" name="severity" value="critical" style="display:none">
+          <span>🔴 High</span>
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <div class="trigger-label" style="margin-bottom:5px">Persons Injured</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="changeCount(-1)" style="width:32px;height:32px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:18px;cursor:pointer;display:grid;place-items:center">−</button>
+        <span id="count-display" style="font-size:22px;font-weight:800;min-width:28px;text-align:center">3</span>
+        <button onclick="changeCount(1)" style="width:32px;height:32px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:18px;cursor:pointer;display:grid;place-items:center">+</button>
+        <span style="font-size:12px;color:var(--muted)">persons</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="trigger-label" style="margin-bottom:5px">Vehicle Involved</div>
+      <select id="vehicle-type" class="sel">
+        <option value="">Unknown / Not specified</option>
+        <option value="bike">Bike / Motorcycle</option>
+        <option value="auto">Auto-rickshaw</option>
+        <option value="car">Car</option>
+        <option value="van">Van / SUV</option>
+        <option value="bus">Bus / Minibus</option>
+        <option value="truck">Truck / Lorry</option>
+        <option value="tanker">Tanker Truck</option>
+      </select>
+    </div>
+
+    <div>
+      <div class="trigger-label" style="margin-bottom:5px">Conditions</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <label class="tag-btn"><input type="checkbox" value="road blocked" onchange="toggleTag(this)"> Road blocked</label>
+        <label class="tag-btn"><input type="checkbox" value="heavy traffic" onchange="toggleTag(this)"> Heavy traffic</label>
+        <label class="tag-btn"><input type="checkbox" value="raining" onchange="toggleTag(this)"> Raining</label>
+        <label class="tag-btn"><input type="checkbox" value="peak hour" onchange="toggleTag(this)"> Peak hour</label>
+      </div>
+    </div>
+
+    <button class="sos-btn pulse" id="sos-btn" onclick="triggerSOS()">
+      <i class="ti ti-sos"></i> TRIGGER EMERGENCY SOS
+    </button>
+
+    <div class="spinner-row" id="spinner">
+      <i class="ti ti-loader spin"></i> AI agents processing…
+    </div>
+
+    <a id="view-results-btn" href="/results">
+      <i class="ti ti-clipboard-list"></i> View Full Dispatch Report
+    </a>
+
+    <div class="hint-box">
+      <strong>How it works:</strong><br>
+      1. Set location, type, severity &amp; persons<br>
+      2. Press SOS → incident pin on map<br>
+      3. AI selects hospital + ambulance<br>
+      4. Route turns green (signals sync'd)<br>
+      5. Click <strong>View Full Report</strong> ↑
+    </div>
+  </aside>
+
+  <div id="map"></div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const LOCATION_COORDS = {
+  "MG Road":           [12.9757,77.6011],
+  "Brigade Road":      [12.9740,77.6076],
+  "Residency Road":    [12.9716,77.5946],
+  "Koramangala":       [12.9352,77.6245],
+  "Indiranagar":       [12.9784,77.6408],
+  "Whitefield":        [12.9698,77.7499],
+  "Hebbal":            [13.0358,77.5970],
+  "Silk Board":        [12.9177,77.6227],
+  "Marathahalli":      [12.9591,77.7004],
+  "Electronic City":   [12.8399,77.6770],
+  "Yeshwantpur":       [13.0213,77.5541],
+  "Bannerghatta Road": [12.8946,77.5966],
+  "Rajajinagar":       [12.9902,77.5558],
+  "Jayanagar":         [12.9308,77.5838],
+  "JP Nagar":          [12.9063,77.5857],
+  "Mysore Road":       [12.9519,77.5204],
+  "Tumkur Road":       [13.0150,77.5200],
+  "Sarjapur Road":     [12.9121,77.6800],
+  "Old Airport Road":  [12.9591,77.6480],
+  "KR Puram":          [13.0050,77.6950],
+  "Nagavara":          [13.0450,77.6210],
+};
+
+let injuredCount = 3;
+let activeTags = new Set();
+
+function changeCount(delta) {
+  injuredCount = Math.max(1, Math.min(20, injuredCount + delta));
+  document.getElementById("count-display").textContent = injuredCount;
+}
+
+function toggleTag(el) {
+  if (el.checked) activeTags.add(el.value);
+  else activeTags.delete(el.value);
+}
+
+document.querySelectorAll(".sev-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".sev-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    btn.querySelector("input").checked = true;
+  });
+});
+
+function buildReportText() {
+  const location  = document.getElementById("location-select").value;
+  const incType   = document.getElementById("incident-type").value;
+  const vehicle   = document.getElementById("vehicle-type").value;
+  const sevVal    = document.querySelector("input[name='severity']:checked").value;
+  const sevWord   = sevVal === "critical" ? "critical" : sevVal === "low" ? "minor" : "moderate";
+  const tags      = [...activeTags].join(", ");
+  const vehPart   = vehicle ? `, ${vehicle} involved` : "";
+  const tagPart   = tags ? `, ${tags}` : "";
+  return `${sevWord} ${incType} at ${location}, ${injuredCount} injured${vehPart}${tagPart}`;
+}
+
+const map = L.map("map").setView([12.9716,77.5946],12);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  attribution:"© OpenStreetMap contributors",maxZoom:18}).addTo(map);
+
+function makeIcon(emoji,size=34){
+  return L.divIcon({className:"",
+    html:`<div style="font-size:${size}px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))">${emoji}</div>`,
+    iconSize:[size,size],iconAnchor:[size/2,size/2],popupAnchor:[0,-size/2]});
+}
+
+let incMarker=null,ambMarker=null,hospMarker=null,routeLine=null,ambInterval=null;
+
+function clearMap(){
+  [incMarker,ambMarker,hospMarker].forEach(m=>m&&map.removeLayer(m));
+  if(routeLine)map.removeLayer(routeLine);
+  if(ambInterval)clearInterval(ambInterval);
+  incMarker=ambMarker=hospMarker=routeLine=null;
+}
+
+function showToast(icon,title,msg,delay=0){
+  setTimeout(()=>{
+    const tc=document.getElementById("toast-container");
+    const t=document.createElement("div");
+    t.className="toast";
+    t.innerHTML=`<div class="toast-icon">${icon}</div>
+      <div style="flex:1"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>
+      <button class="toast-close" onclick="this.closest('.toast').remove()"><i class="ti ti-x"></i></button>
+      <div class="toast-bar"></div>`;
+    tc.appendChild(t);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add("show")));
+    setTimeout(()=>{t.classList.remove("show");setTimeout(()=>t.remove(),450);},8000);
+  },delay);
+}
+
+function animateAmb(from,to){
+  let step=0;const steps=100;
+  ambInterval=setInterval(()=>{
+    step++;
+    const f=step/steps;
+    if(ambMarker)ambMarker.setLatLng([from[0]+(to[0]-from[0])*f,from[1]+(to[1]-from[1])*f]);
+    if(step>=steps)clearInterval(ambInterval);
+  },250);
+}
+
+async function triggerSOS(){
+  const btn=document.getElementById("sos-btn");
+  const spinner=document.getElementById("spinner");
+  const location=document.getElementById("location-select").value;
+  const text=buildReportText();
+
+  btn.disabled=true;
+  btn.classList.remove("pulse");
+  spinner.classList.add("show");
+  document.getElementById("view-results-btn").classList.remove("show");
+  clearMap();
+  document.getElementById("toast-container").innerHTML="";
+
+  const incCoords=LOCATION_COORDS[location]||[12.9716,77.5946];
+  incMarker=L.marker(incCoords,{icon:makeIcon("🚨",34)})
+    .addTo(map).bindPopup(`<b>🚨 Emergency at ${location}</b><br>${text}`).openPopup();
+  map.setView(incCoords,13);
+
+  showToast("🚨","SOS Received",`Emergency at ${location}. Dispatching AI agents…`,0);
+
+  try{
+    const res=await fetch("/dispatch",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text}),
+    });
+    const data=await res.json();
+
+    sessionStorage.setItem("dispatchResult", JSON.stringify(data));
+    sessionStorage.setItem("dispatchLocation", location);
+    sessionStorage.setItem("dispatchSeverity", text);
+
+    const amb=data.agents.ambulance;
+    const hosp=data.agents.hospital;
+
+    if(hosp.recommended_lat&&hosp.recommended_lon){
+      const hCoords=[hosp.recommended_lat,hosp.recommended_lon];
+      hospMarker=L.marker(hCoords,{icon:makeIcon("🏥",34)})
+        .addTo(map).bindPopup(`<b>🏥 ${hosp.recommended}</b><br>Free beds: ${hosp.recommended_beds}`);
+
+      routeLine=L.polyline([incCoords,hCoords],{color:"#d83232",weight:6,opacity:.9,dashArray:"12 7"}).addTo(map);
+      map.fitBounds(L.latLngBounds([incCoords,hCoords]),{padding:[70,70]});
+
+      const ambCoords=amb.unit_lat&&amb.unit_lon?[amb.unit_lat,amb.unit_lon]:incCoords;
+      ambMarker=L.marker(ambCoords,{icon:makeIcon("🚑",34)})
+        .addTo(map).bindPopup(`<b>🚑 ${amb.selected_unit}</b><br>${amb.unit_base}<br>ETA: ${amb.eta_minutes} min`);
+
+      setTimeout(()=>{
+        if(routeLine)routeLine.setStyle({color:"#2f9e44",dashArray:null,opacity:1,weight:7});
+        animateAmb(ambCoords,incCoords);
+      },2000);
+    }
+
+    showToast("🏥","Hospital Pre-Alert Sent",`${hosp.recommended} — preparing ${hosp.beds_reserved} bed(s). ETA: ${amb.eta_minutes} min.`,800);
+    showToast("🚓","Police Dispatched",`${data.agents.police.units_dispatched} unit(s) en route. ${data.agents.police.perimeter_radius_m}m perimeter activated.`,2200);
+    showToast("🚗","Vehicles Alerted",`Ambulance approaching on ${amb.route}. Please clear the corridor.`,3800);
+
+    setTimeout(()=>{
+      document.getElementById("view-results-btn").classList.add("show");
+    },4500);
+
+  }catch(e){
+    showToast("⚠️","Connection Error","Could not reach the server. Make sure FastAPI is running.");
+  }finally{
+    spinner.classList.remove("show");
+    btn.disabled=false;
+    btn.classList.add("pulse");
+  }
+}
+</script>
+</body>
+</html>

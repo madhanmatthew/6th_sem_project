@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Emergency Coordination Command Center</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root {
+  --bg: #f7f8fa;
+  --panel: #ffffff;
+  --panel-soft: #f0f4f8;
+  --ink: #18212f;
+  --muted: #687386;
+  --line: #dbe2ea;
+  --blue: #2563eb;
+  --teal: #0f9f8f;
+  --green: #2f9e44;
+  --amber: #c77700;
+  --red: #d83232;
+  --violet: #6f4bd8;
+  --shadow: 0 14px 40px rgba(24, 33, 47, 0.08);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button, input { font: inherit; }
+button { cursor: pointer; }
+
+.shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 20px 0 28px;
+}
+
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #ffe5e5;
+  color: var(--red);
+  border: 1px solid #ffbbbb;
+  flex: 0 0 auto;
+}
+
+.brand h1 {
+  font-size: 21px;
+  line-height: 1.2;
+  margin: 0;
+  font-weight: 750;
+}
+
+.brand p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+  box-shadow: 0 6px 24px rgba(24, 33, 47, 0.05);
+  white-space: nowrap;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.route-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.route-nav a {
+  text-decoration: none;
+  color: #344154;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.route-nav a.active {
+  color: #fff;
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--green);
+  box-shadow: 0 0 0 5px rgba(47, 158, 68, 0.12);
+}
+
+.command {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.command-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.input-wrap {
+  position: relative;
+}
+
+.input-wrap i {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+#report-input {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #cfd8e3;
+  border-radius: 7px;
+  background: #fbfcfe;
+  color: var(--ink);
+  outline: none;
+  padding: 0 14px 0 40px;
+  font-size: 14px;
+}
+
+#report-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.dispatch-btn {
+  height: 46px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--red);
+  color: #fff;
+  padding: 0 18px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dispatch-btn:disabled {
+  opacity: 0.62;
+  cursor: wait;
+}
+
+.scenario-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 11px;
+}
+
+.scenario {
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+  color: #3a4557;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.scenario:hover {
+  border-color: #aebbc9;
+  background: #e7eef6;
+}
+
+.model-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.model-chip {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 62px;
+}
+
+.model-chip i {
+  color: var(--blue);
+  margin-right: 5px;
+}
+
+.model-chip b {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.model-chip span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.85fr);
+  gap: 14px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 9px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.kpi {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 92px;
+}
+
+.kpi-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.kpi-value {
+  font-size: 30px;
+  line-height: 1;
+  margin-top: 9px;
+  font-weight: 760;
+}
+
+.kpi-sub {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.parsed-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.parsed-item {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.parsed-item small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.parsed-item strong {
+  display: block;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.agent-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px;
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.agent-card.active {
+  border-color: var(--blue);
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.11);
+  transform: translateY(-1px);
+}
+
+.agent-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.agent-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.agent-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--panel-soft);
+  color: var(--blue);
+  font-size: 21px;
+  flex: 0 0 auto;
+}
+
+.agent-title h2 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.agent-title p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #edf2f7;
+  color: #526071;
+  white-space: nowrap;
+}
+
+.badge.live { background: #e7f6ef; color: #197044; }
+.badge.warn { background: #fff3d8; color: #8a5700; }
+.badge.done { background: #eaf1ff; color: #1d54bd; }
+.badge.critical { background: #ffe5e5; color: #b91c1c; }
+
+.agent-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.stat {
+  background: #f8fafc;
+  border: 1px solid #e6edf5;
+  border-radius: 7px;
+  padding: 8px;
+  min-height: 57px;
+}
+
+.stat small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.stat b {
+  font-size: 14px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-log {
+  border-radius: 7px;
+  background: #101824;
+  color: #d8e5f5;
+  padding: 10px;
+  min-height: 78px;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: auto;
+}
+
+.progress {
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e5ebf2;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--teal);
+  transition: width 0.45s ease;
+}
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 168px;
+}
+
+.tl-item {
+  display: grid;
+  grid-template-columns: 23px 42px 1fr;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12px;
+}
+
+.tl-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-top: 3px;
+  background: var(--blue);
+}
+
+.tl-dot.green { background: var(--green); }
+.tl-dot.amber { background: var(--amber); }
+.tl-dot.red { background: var(--red); }
+.tl-time { color: var(--muted); }
+.tl-text { line-height: 1.45; }
+
+.notice {
+  border-radius: 8px;
+  padding: 11px;
+  display: none;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.notice.show { display: block; }
+.notice.warn { background: #fff7e6; border: 1px solid #ffd48a; color: #825200; }
+.notice.ok { background: #e9f8ef; border: 1px solid #bfe7ce; color: #166534; }
+
+.summary {
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  background: #101824;
+  color: #d8e5f5;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 164px;
+  white-space: pre-wrap;
+}
+
+.hospital-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.hospital-table th,
+.hospital-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid #e8eef5;
+  text-align: left;
+}
+
+.hospital-table th {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hospital-table tr:last-child td { border-bottom: 0; }
+
+@media (max-width: 980px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .model-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .parsed-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 660px) {
+  .shell { width: min(100% - 20px, 1180px); padding-top: 12px; }
+  .topbar { grid-template-columns: 1fr; }
+  .command-grid { grid-template-columns: 1fr; }
+  .dispatch-btn { width: 100%; justify-content: center; }
+  .kpi-grid, .agents-grid, .parsed-strip, .model-strip { grid-template-columns: 1fr; }
+  .brand h1 { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><i class="ti ti-ambulance"></i></div>
+      <div>
+        <h1>Emergency Coordination Command Center</h1>
+        <p>Multi-agent dispatch dashboard for ambulance, traffic, police, and hospital teams.</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <nav class="route-nav">
+        <a href="/">Overview</a>
+        <a href="/map">Live Map</a>
+        <a class="active" href="/dispatch">Dispatch Console</a>
+      </nav>
+      <div class="status-pill"><span class="live-dot"></span><span id="sys-status">Ready</span></div>
+    </div>
+  </header>
+
+  <section class="command">
+    <div class="command-grid">
+      <div class="input-wrap">
+        <i class="ti ti-message-report"></i>
+        <input id="report-input" type="text" value="Major accident on MG Road, 3 injured, truck collision during rush traffic" placeholder="Enter emergency report">
+      </div>
+      <button id="dispatch-btn" class="dispatch-btn" onclick="runDispatch()">
+        <i class="ti ti-send"></i>
+        Dispatch
+      </button>
+    </div>
+    <div class="scenario-row">
+      <button class="scenario" onclick="useScenario('Major accident on MG Road, 3 injured, truck collision during rush traffic')">MG Road crash</button>
+      <button class="scenario" onclick="useScenario('Critical bus rollover at Silk Board, 7 injured, road blocked and heavy traffic')">Silk Board rollover</button>
+      <button class="scenario" onclick="useScenario('Minor bike accident near Indiranagar, 1 injured, light traffic')">Indiranagar minor</button>
+      <button class="scenario" onclick="useScenario('Severe car crash at Whitefield, 4 injured, rain and traffic jam')">Whitefield rain crash</button>
+    </div>
+  </section>
+
+  <section class="model-strip">
+    <div class="model-chip"><b><i class="ti ti-ambulance"></i>Ambulance</b><span>ETA regressor plus utility policy ranker</span></div>
+    <div class="model-chip"><b><i class="ti ti-traffic-lights"></i>Traffic</b><span>RandomForest delay and congestion predictor</span></div>
+    <div class="model-chip"><b><i class="ti ti-shield"></i>Police</b><span>TF-IDF LogisticRegression severity classifier</span></div>
+    <div class="model-chip"><b><i class="ti ti-building-hospital"></i>Hospital</b><span>RandomForest Q-value optimizer</span></div>
+    <div class="model-chip"><b><i class="ti ti-chart-line"></i>Model RMSE</b><span id="rmse-label">Loading...</span></div>
+  </section>
+
+  <section class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label"><i class="ti ti-clock-bolt"></i> Final ETA</div>
+      <div class="kpi-value" id="eta-val">--</div>
+      <div class="kpi-sub">minutes</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label"><i class="ti ti-alert-triangle"></i> Severity</div>
+      <div class="kpi-value" id="sev-val">--</div>
+      <div class="kpi-sub" id="sev-label">awaiting report</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label"><i class="ti ti-bed"></i> Beds Reserved</div>
+      <div class="kpi-value" id="beds-val">--</div>
+      <div class="kpi-sub">hospital intake</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label"><i class="ti ti-git-merge"></i> Conflicts</div>
+      <div class="kpi-value" id="conflict-val">--</div>
+      <div class="kpi-sub">resolved rounds</div>
+    </div>
+  </section>
+
+  <section class="parsed-strip">
+    <div class="parsed-item"><small>Location</small><strong id="parsed-location">--</strong></div>
+    <div class="parsed-item"><small>Incident</small><strong id="parsed-incident">--</strong></div>
+    <div class="parsed-item"><small>Injured</small><strong id="parsed-injured">--</strong></div>
+    <div class="parsed-item"><small>Traffic</small><strong id="parsed-traffic">--</strong></div>
+    <div class="parsed-item"><small>NLP Confidence</small><strong id="parsed-confidence">--</strong></div>
+  </section>
+
+  <div class="main-grid">
+    <section>
+      <div class="section-title">Agent Responses <span id="agent-count">0/4 complete</span></div>
+      <div class="agents-grid">
+        <article class="agent-card" id="card-amb">
+          <div class="agent-top">
+            <div class="agent-title">
+              <div class="agent-icon"><i class="ti ti-ambulance"></i></div>
+              <div><h2>Ambulance Agent</h2><p>ETA prediction, unit ranking, triage allocation</p></div>
+            </div>
+            <span id="amb-badge" class="badge">Idle</span>
+          </div>
+          <div class="agent-stats">
+            <div class="stat"><small>ETA</small><b id="amb-stat-1">--</b></div>
+            <div class="stat"><small>Units</small><b id="amb-stat-2">--</b></div>
+            <div class="stat"><small>Priority</small><b id="amb-stat-3">--</b></div>
+          </div>
+          <div class="agent-log" id="amb-out">Waiting for dispatch...</div>
+          <div class="progress"><span id="amb-prog"></span></div>
+        </article>
+
+        <article class="agent-card" id="card-traf">
+          <div class="agent-top">
+            <div class="agent-title">
+              <div class="agent-icon"><i class="ti ti-traffic-lights"></i></div>
+              <div><h2>Traffic Agent</h2><p>ML delay prediction, signal policy, diversions</p></div>
+            </div>
+            <span id="traf-badge" class="badge">Idle</span>
+          </div>
+          <div class="agent-stats">
+            <div class="stat"><small>Congestion</small><b id="traf-stat-1">--</b></div>
+            <div class="stat"><small>Signals</small><b id="traf-stat-2">--</b></div>
+            <div class="stat"><small>Delay</small><b id="traf-stat-3">--</b></div>
+          </div>
+          <div class="agent-log" id="traf-out">Waiting for dispatch...</div>
+          <div class="progress"><span id="traf-prog"></span></div>
+        </article>
+
+        <article class="agent-card" id="card-pol">
+          <div class="agent-top">
+            <div class="agent-title">
+              <div class="agent-icon"><i class="ti ti-shield"></i></div>
+              <div><h2>Police Agent</h2><p>ML severity classification and deployment policy</p></div>
+            </div>
+            <span id="pol-badge" class="badge">Idle</span>
+          </div>
+          <div class="agent-stats">
+            <div class="stat"><small>Units</small><b id="pol-stat-1">--</b></div>
+            <div class="stat"><small>Perimeter</small><b id="pol-stat-2">--</b></div>
+            <div class="stat"><small>Crowd Risk</small><b id="pol-stat-3">--</b></div>
+          </div>
+          <div class="agent-log" id="pol-out">Waiting for dispatch...</div>
+          <div class="progress"><span id="pol-prog"></span></div>
+        </article>
+
+        <article class="agent-card" id="card-hosp">
+          <div class="agent-top">
+            <div class="agent-title">
+              <div class="agent-icon"><i class="ti ti-building-hospital"></i></div>
+              <div><h2>Hospital Agent</h2><p>ML Q-value hospital scoring and bed reservation</p></div>
+            </div>
+            <span id="hosp-badge" class="badge">Idle</span>
+          </div>
+          <div class="agent-stats">
+            <div class="stat"><small>Hospital</small><b id="hosp-stat-1">--</b></div>
+            <div class="stat"><small>Reserved</small><b id="hosp-stat-2">--</b></div>
+            <div class="stat"><small>Fallback</small><b id="hosp-stat-3">--</b></div>
+          </div>
+          <div class="agent-log" id="hosp-out">Waiting for dispatch...</div>
+          <div class="progress"><span id="hosp-prog"></span></div>
+        </article>
+      </div>
+    </section>
+
+    <aside class="side-panel">
+      <section class="panel">
+        <div class="section-title">Decision Timeline</div>
+        <div class="timeline" id="timeline">
+          <div class="tl-item"><span class="tl-dot"></span><span class="tl-time">T+0</span><span class="tl-text">Awaiting emergency report.</span></div>
+        </div>
+      </section>
+
+      <section class="notice warn" id="conflict-box">
+        <strong>Conflict detected</strong>
+        <div id="conflict-log"></div>
+      </section>
+
+      <section class="notice ok" id="resolution-box">
+        <strong>Resolution reached</strong>
+        <div id="resolution-text"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">Hospital Capacity</div>
+        <table class="hospital-table">
+          <thead><tr><th>Hospital</th><th>Beds</th><th>Trauma</th></tr></thead>
+          <tbody id="hospital-table-body">
+            <tr><td colspan="3">Waiting for hospital agent.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">Final Dispatch</div>
+        <div class="summary" id="dispatch-text">No dispatch active.</div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<script>
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const $ = id => document.getElementById(id);
+
+const agentMap = {
+  Ambulance: "amb",
+  Traffic: "traf",
+  Police: "pol",
+  Hospital: "hosp"
+};
+
+let completedAgents = new Set();
+
+fetch("/model-info")
+  .then(response => response.json())
+  .then(data => {
+    const severityAcc = data.agent_models?.severity?.accuracy;
+    $("rmse-label").textContent = severityAcc
+      ? `ETA RMSE ${data.rmse_minutes} min | NLP acc ${Math.round(severityAcc * 100)}%`
+      : `${data.rmse_minutes} min over ${data.training_samples} samples`;
+  })
+  .catch(() => {
+    $("rmse-label").textContent = "Unavailable";
+  });
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function useScenario(text) {
+  $("report-input").value = text;
+  $("report-input").focus();
+}
+
+function setBadge(prefix, text, cls = "") {
+  const el = $(`${prefix}-badge`);
+  el.textContent = text;
+  el.className = `badge ${cls}`.trim();
+}
+
+function setProgress(prefix, value) {
+  $(`${prefix}-prog`).style.width = `${value}%`;
+}
+
+function addTimeline(color, text) {
+  const count = $("timeline").children.length;
+  const row = document.createElement("div");
+  row.className = "tl-item";
+  row.innerHTML = `<span class="tl-dot ${color}"></span><span class="tl-time">T+${count}</span><span class="tl-text">${escapeHtml(text)}</span>`;
+  $("timeline").appendChild(row);
+}
+
+function resetUI() {
+  completedAgents = new Set();
+  $("agent-count").textContent = "0/4 complete";
+  $("sys-status").textContent = "Ready";
+
+  ["eta-val", "sev-val", "beds-val", "conflict-val"].forEach(id => $(id).textContent = "--");
+  $("sev-label").textContent = "awaiting report";
+  ["parsed-location", "parsed-incident", "parsed-injured", "parsed-traffic", "parsed-confidence"].forEach(id => $(id).textContent = "--");
+
+  ["amb", "traf", "pol", "hosp"].forEach(prefix => {
+    setBadge(prefix, "Idle");
+    setProgress(prefix, 0);
+    $(`${prefix}-out`).textContent = "Waiting for dispatch...";
+    for (let i = 1; i <= 3; i += 1) {
+      $(`${prefix}-stat-${i}`).textContent = "--";
+    }
+  });
+
+  ["card-amb", "card-traf", "card-pol", "card-hosp"].forEach(id => $(id).classList.remove("active"));
+  $("timeline").innerHTML = "";
+  addTimeline("", "Emergency report received by command center.");
+  $("conflict-box").classList.remove("show");
+  $("resolution-box").classList.remove("show");
+  $("conflict-log").textContent = "";
+  $("resolution-text").textContent = "";
+  $("dispatch-text").textContent = "Coordination in progress...";
+  $("hospital-table-body").innerHTML = `<tr><td colspan="3">Waiting for hospital agent.</td></tr>`;
+}
+
+async function typeText(id, text, delay = 8) {
+  const el = $(id);
+  el.textContent = "";
+  for (let i = 0; i < text.length; i += 1) {
+    el.textContent += text[i];
+    if (i % 5 === 0) {
+      await sleep(delay);
+    }
+  }
+}
+
+function markComplete(agentName) {
+  completedAgents.add(agentName);
+  $("agent-count").textContent = `${completedAgents.size}/4 complete`;
+}
+
+function updateParsed(data) {
+  $("sev-val").textContent = data.severity;
+  $("sev-label").textContent = data.severity_label;
+  $("parsed-location").textContent = data.location;
+  $("parsed-incident").textContent = data.incident_type;
+  $("parsed-injured").textContent = `${data.injured} person(s)`;
+  $("parsed-traffic").textContent = `${data.traffic_hint}, ${data.weather_hint}`;
+  $("parsed-confidence").textContent = `${Math.round(data.confidence * 100)}%`;
+  addTimeline("green", `Parsed ${data.incident_type} at ${data.location}, severity ${data.severity}/5.`);
+}
+
+async function updateAgent(data) {
+  const prefix = agentMap[data.agent];
+  $(`card-${prefix}`).classList.add("active");
+  setBadge(prefix, "Active", data.agent === "Police" && data.severity_classified >= 4 ? "critical" : "live");
+  setProgress(prefix, 75);
+
+  if (data.agent === "Ambulance") {
+    $("eta-val").textContent = data.eta_minutes;
+    $("amb-stat-1").textContent = `${data.eta_minutes} min`;
+    $("amb-stat-2").textContent = `${data.ambulances_dispatched} amb`;
+    $("amb-stat-3").textContent = data.triage_priority;
+    await typeText("amb-out",
+      `Nearest unit: ${data.distance_km} km\n` +
+      `Selected unit: ${data.selected_unit} (${data.unit_base})\n` +
+      `Route: ${data.route}\n` +
+      `Alt route: ${data.alt_route}\n` +
+      `Top unit score: ${data.unit_candidates[0].score}\n` +
+      `Teams: ${data.paramedic_teams}\n` +
+      `Confidence: ${Math.round(data.confidence * 100)}%`
+    );
+    addTimeline("green", `Ambulance ETA ${data.eta_minutes} min via ${data.route}.`);
+  }
+
+  if (data.agent === "Traffic") {
+    $("traf-stat-1").textContent = data.congestion_level;
+    $("traf-stat-2").textContent = data.junctions_overridden;
+    $("traf-stat-3").textContent = `${data.predicted_delay_min} min`;
+    await typeText("traf-out",
+      `Congestion: ${data.congestion_level}\n` +
+      `Delay forecast: ${data.predicted_delay_min} min\n` +
+      `ML confidence: ${Math.round(data.ml_confidence * 100)}%\n` +
+      `Signals overridden: ${data.junctions_overridden}\n` +
+      `Corridor: ${data.corridor_status}\n` +
+      `Top policy score: ${data.mode_candidates[0].score}\n` +
+      `Diversions: ${data.diversion_roads.join(", ")}`
+    );
+    addTimeline("amber", `Traffic locked ${data.junctions_overridden} signals for the corridor.`);
+  }
+
+  if (data.agent === "Police") {
+    $("pol-stat-1").textContent = data.units_dispatched;
+    $("pol-stat-2").textContent = `${data.perimeter_radius_m} m`;
+    $("pol-stat-3").textContent = data.crowd_risk;
+    await typeText("pol-out",
+      `Severity class: ${data.severity_classified}/5\n` +
+      `ML severity: ${data.ml_severity}/5 (${Math.round(data.ml_severity_confidence * 100)}%)\n` +
+      `Units dispatched: ${data.units_dispatched}\n` +
+      `Perimeter: ${data.perimeter_radius_m} m\n` +
+      `Blocked road: ${data.perimeter_road}\n` +
+      `Top policy score: ${data.deployment_candidates[0].score}\n` +
+      `Protocol: ${data.protocol}`
+    );
+    addTimeline("red", `Police assigned ${data.units_dispatched} units and ${data.perimeter_radius_m} m perimeter.`);
+  }
+
+  if (data.agent === "Hospital") {
+    $("beds-val").textContent = data.beds_reserved;
+    $("hosp-stat-1").textContent = data.recommended;
+    $("hosp-stat-2").textContent = data.beds_reserved;
+    $("hosp-stat-3").textContent = data.fallback;
+    await typeText("hosp-out",
+      `Selected: ${data.recommended}\n` +
+      `Beds free: ${data.recommended_beds}\n` +
+      `Beds reserved: ${data.beds_reserved}\n` +
+      `Fallback: ${data.fallback}\n` +
+      `Top ML Q-score: ${data.hospital_candidates[0].ml_score}\n` +
+      `Trauma required: ${data.trauma_required ? "YES" : "NO"}`
+    );
+    renderHospitals(data.all_hospitals);
+    addTimeline("green", `${data.recommended} reserved ${data.beds_reserved} bed(s).`);
+  }
+
+  setBadge(prefix, "Done", "done");
+  setProgress(prefix, 100);
+  markComplete(data.agent);
+}
+
+function renderHospitals(hospitals) {
+  $("hospital-table-body").innerHTML = hospitals
+    .map(hospital => `
+      <tr>
+        <td>${escapeHtml(hospital.name)}</td>
+        <td>${hospital.free_beds}</td>
+        <td>${hospital.trauma ? "Yes" : "No"}</td>
+      </tr>
+    `)
+    .join("");
+}
+
+function updateCoordination(data, agents, originalText) {
+  $("conflict-val").textContent = data.conflicts_detected;
+
+  if (data.conflicts_detected > 0) {
+    const conflict = data.conflicts[0];
+    $("conflict-box").classList.add("show");
+    $("conflict-log").textContent =
+      `\n${conflict.description}\n` +
+      `Ambulance bid: ${conflict.bids.Ambulance}\n` +
+      `Police bid: ${conflict.bids.Police}`;
+    addTimeline("amber", `Conflict ${conflict.type} sent to bid negotiation.`);
+
+    if (data.resolution) {
+      $("resolution-box").classList.add("show");
+      $("resolution-text").textContent = `\n${data.resolution.action} ETA updated to ${data.resolution.eta_updated} min.`;
+      $("eta-val").textContent = data.resolution.eta_updated;
+      addTimeline("green", `Resolution accepted. Final route is ${data.final_route}.`);
+    }
+  } else {
+    addTimeline("green", "No conflicts detected. Corridor confirmed.");
+  }
+
+  const ambulance = agents.Ambulance || {};
+  const traffic = agents.Traffic || {};
+  const police = agents.Police || {};
+  const hospital = agents.Hospital || {};
+
+  $("dispatch-text").textContent =
+    `STATUS       : ${data.status}\n` +
+    `EVENT        : ${originalText.slice(0, 70)}${originalText.length > 70 ? "..." : ""}\n` +
+    `ETA          : ${data.final_eta} min\n` +
+    `ROUTE        : ${data.final_route || ambulance.route || "--"}\n` +
+    `HOSPITAL     : ${data.final_hospital}\n` +
+    `AMBULANCES   : ${data.resource_summary.ambulances}\n` +
+    `PARAMEDICS   : ${data.resource_summary.paramedic_teams}\n` +
+    `POLICE       : ${data.resource_summary.police_units} units\n` +
+    `SIGNALS      : ${data.resource_summary.signals_overridden} overridden\n` +
+    `BEDS         : ${data.resource_summary.beds_reserved} reserved\n` +
+    `CONGESTION   : ${traffic.congestion_level || "--"}\n` +
+    `PERIMETER    : ${police.perimeter_radius_m || "--"} m\n` +
+    `FALLBACK     : ${hospital.fallback || "--"}`;
+}
+
+async function runDispatchRest(text) {
+  const response = await fetch("/dispatch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+  const result = await response.json();
+  updateParsed(result.parsed);
+  const agents = {
+    Ambulance: result.agents.ambulance,
+    Traffic: result.agents.traffic,
+    Police: result.agents.police,
+    Hospital: result.agents.hospital
+  };
+  for (const agent of Object.values(agents)) {
+    await updateAgent(agent);
+  }
+  updateCoordination(result.coordination, agents, text);
+}
+
+async function runDispatch() {
+  const text = $("report-input").value.trim();
+  if (!text) return;
+
+  resetUI();
+  $("dispatch-btn").disabled = true;
+  $("sys-status").textContent = "Processing";
+
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${proto}://${location.host}/ws/dispatch`);
+  const agents = {};
+  let finished = false;
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ text }));
+  };
+
+  ws.onmessage = async message => {
+    const payload = JSON.parse(message.data);
+
+    if (payload.event === "parsed") {
+      updateParsed(payload.data);
+    }
+
+    if (payload.event === "agent") {
+      agents[payload.data.agent] = payload.data;
+      await updateAgent(payload.data);
+    }
+
+    if (payload.event === "coordination") {
+      updateCoordination(payload.data, agents, text);
+    }
+
+    if (payload.event === "done") {
+      finished = true;
+      $("sys-status").textContent = "Dispatched";
+      $("dispatch-btn").disabled = false;
+      ws.close();
+    }
+  };
+
+  ws.onerror = async () => {
+    if (finished) return;
+    $("sys-status").textContent = "Using REST fallback";
+    try {
+      await runDispatchRest(text);
+      $("sys-status").textContent = "Dispatched";
+    } catch (error) {
+      $("sys-status").textContent = "Server unavailable";
+      $("dispatch-text").textContent = "Dispatch failed. Start the FastAPI server and try again.";
+    } finally {
+      $("dispatch-btn").disabled = false;
+    }
+  };
+}
+</script>
+</body>
+</html>
