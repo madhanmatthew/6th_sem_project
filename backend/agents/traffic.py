@@ -1,5 +1,5 @@
-from agents.policy import compact_scores, inverse_normalize, normalize, ranked, softmax_confidence
-from ml_models import traffic_feature_frame
+from backend.agents.policy import compact_scores, inverse_normalize, normalize, ranked, softmax_confidence
+from backend.ml.ml_models import traffic_feature_frame
 
 
 CONGESTION_LABELS = ["LOW", "MODERATE", "HIGH", "SEVERE"]

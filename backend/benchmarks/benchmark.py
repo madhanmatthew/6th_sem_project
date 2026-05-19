@@ -9,10 +9,10 @@ import textwrap
 from io import StringIO
 
 # ── Core imports (no server) ──────────────────────────────────────────────────
-from data import AMBULANCE_BASES, HOSPITALS
-from eta_model import train_eta_model
-from ml_models import apply_severity_model, train_ml_models
-from report_parser import parse_report
+from backend.data.data import AMBULANCE_BASES, HOSPITALS
+from backend.ml.eta_model import train_eta_model
+from backend.ml.ml_models import apply_severity_model, train_ml_models
+from backend.data.report_parser import parse_report
 
 # ── Train models once ─────────────────────────────────────────────────────────
 print("=" * 62)

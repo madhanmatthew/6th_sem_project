@@ -79,7 +79,7 @@ def train_eta_model():
     importances = dict(zip(MODEL_FEATURES, model.feature_importances_))
     print("[ETA Model] Feature importances:")
     for feat, imp in sorted(importances.items(), key=lambda x: -x[1]):
-        bar = "█" * int(imp * 40)
+        bar = "#" * int(imp * 40)
         print(f"  {feat:<16} {imp:.3f}  {bar}")
 
     joblib.dump(model, MODEL_PATH)

@@ -12,7 +12,7 @@ BASE_DIR = os.path.dirname(__file__)
 # Load real hospital coordinates from geojson
 # ---------------------------------------------------------------------------
 _HOSPITAL_COORDS = {}
-_geojson_path = os.path.join(BASE_DIR, "datasets", "bengaluru_hospitals.geojson")
+_geojson_path = os.path.join(BASE_DIR, "..", "datasets", "bengaluru_hospitals.geojson")
 with open(_geojson_path, "r", encoding="utf-8") as _f:
     _geojson = json.load(_f)
 for _feat in _geojson["features"]:
@@ -90,7 +90,7 @@ _CAPACITY_MAP = {
 }
 
 HOSPITALS = []
-_csv_path = os.path.join(BASE_DIR, "datasets", "curated_emergency_hospitals.csv")
+_csv_path = os.path.join(BASE_DIR, "..", "datasets", "curated_emergency_hospitals.csv")
 with open(_csv_path) as _f:
     for row in csv.DictReader(_f):
         name = row["name"]
@@ -112,7 +112,7 @@ with open(_csv_path) as _f:
 # Load real ambulance bases from CSV
 # ---------------------------------------------------------------------------
 AMBULANCE_BASES = []
-_amb_path = os.path.join(BASE_DIR, "datasets", "ambulance_bases.csv")
+_amb_path = os.path.join(BASE_DIR, "..", "datasets", "ambulance_bases.csv")
 with open(_amb_path) as _f:
     for row in csv.DictReader(_f):
         AMBULANCE_BASES.append({

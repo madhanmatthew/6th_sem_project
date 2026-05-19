@@ -1,6 +1,6 @@
 import re
 
-from data import LOCATION_PROFILES, LOCATIONS
+from backend.data.data import LOCATION_PROFILES, LOCATIONS
 
 
 SEVERITY_LABELS = {

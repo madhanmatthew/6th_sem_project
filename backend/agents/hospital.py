@@ -1,9 +1,9 @@
 import numpy as np
 
-from agents.policy import compact_scores, inverse_normalize, normalize, ranked, softmax_confidence, stable_rng
-from data import HOSPITALS, LOCATION_COORDS
-from ml_models import hospital_feature_frame
-from routing import batch_hospital_distances
+from backend.agents.policy import compact_scores, inverse_normalize, normalize, ranked, softmax_confidence, stable_rng
+from backend.data.data import HOSPITALS, LOCATION_COORDS
+from backend.ml.ml_models import hospital_feature_frame
+from backend.routing.routing import batch_hospital_distances
 
 
 def hospital_agent(parsed, hospital_model):

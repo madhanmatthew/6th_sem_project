@@ -1,4 +1,4 @@
-from agents.policy import compact_scores, normalize, ranked, softmax_confidence
+from backend.agents.policy import compact_scores, normalize, ranked, softmax_confidence
 
 
 DEPLOYMENT_PLANS = [

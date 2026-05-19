@@ -10,16 +10,19 @@ import sys
 import threading
 import time
 
+# Add project root to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from agents import ambulance_agent, coordinator, hospital_agent, police_agent, traffic_agent
-from eta_model import MODEL_FEATURES, TRAINING_SAMPLES, train_eta_model
-from ml_models import apply_severity_model, train_ml_models
-from report_parser import parse_report
+from backend.agents import ambulance_agent, coordinator, hospital_agent, police_agent, traffic_agent
+from backend.ml.eta_model import MODEL_FEATURES, TRAINING_SAMPLES, train_eta_model
+from backend.ml.ml_models import apply_severity_model, train_ml_models
+from backend.data.report_parser import parse_report
 
 # ── ORS API KEY ─────────────────────────────────────────────────────────────
 # Paste your key from openrouteservice.org here OR set env var ORS_API_KEY
@@ -78,15 +81,15 @@ def dispatch(req: ReportRequest):
 
 @app.get("/dispatch")
 def dispatch_page():
-    return FileResponse("static/index.html")
+    return FileResponse(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "static", "index.html"))
 
 @app.get("/map")
 def map_page():
-    return FileResponse("static/map.html")
+    return FileResponse(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "static", "map.html"))
 
 @app.get("/results")
 def results_page():
-    return FileResponse("static/results.html")
+    return FileResponse(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "static", "results.html"))
 
 @app.get("/model-info")
 def model_info():
@@ -126,11 +129,11 @@ async def ws_dispatch(ws: WebSocket):
     except WebSocketDisconnect:
         pass
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "static")), name="static")
 
 @app.get("/")
 def index():
-    return FileResponse("static/home.html")
+    return FileResponse(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "static", "home.html"))
 
 if __name__ == "__main__":
     import uvicorn
